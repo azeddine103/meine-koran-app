@@ -10,31 +10,47 @@
     <title>Koran Suche - Smart & Stats</title>
     <link href="https://fonts.googleapis.com/css2?family=Amiri&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; padding: 20px; color: #333; }
-        .container { max-width: 850px; margin: auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 25px rgba(0,0,0,0.1); }
-        h1 { text-align: center; color: #166534; margin-bottom: 10px; }
-        
-        #status { text-align: center; font-size: 13px; margin-bottom: 15px; padding: 8px; border-radius: 6px; transition: 0.3s; }
-        .loading { background: #fef9c3; color: #854d0e; }
-        .ready { background: #dcfce7; color: #166534; }
-        
-        .search-wrapper { position: relative; margin-bottom: 10px; }
-        input { 
-            width: 100%; padding: 15px; border: 2px solid #e5e7eb; border-radius: 10px; 
-            font-size: 18px; outline: none; box-sizing: border-box; 
-        }
-        input:focus { border-color: #166534; }
-
-        /* Trefferanzeige Styling */
-        #stats { font-size: 14px; color: #64748b; margin-bottom: 20px; font-weight: 600; min-height: 20px; }
-        
-        .result-item { border-bottom: 1px solid #f1f5f9; padding: 25px 0; animation: fadeIn 0.3s ease; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        
-        .arabic { font-family: 'Amiri', serif; font-size: 32px; text-align: right; direction: rtl; display: block; color: #111; line-height: 1.8; margin-bottom: 12px; }
-        .german { font-size: 17px; color: #4b5563; line-height: 1.6; border-left: 3px solid #166534; padding-left: 15px; }
-        .meta { font-size: 11px; color: #94a3b8; margin-top: 15px; text-transform: uppercase; letter-spacing: 0.5px; }
-    </style>
+    body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; padding: 15px; color: #333; }
+    .container { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    h1 { text-align: center; color: #166534; font-size: 22px; margin-bottom: 5px; }
+    
+    #status { text-align: center; font-size: 12px; margin-bottom: 10px; padding: 5px; border-radius: 4px; }
+    .loading { background: #fef9c3; color: #854d0e; }
+    .ready { background: #dcfce7; color: #166534; }
+    
+    .search-wrapper { margin-bottom: 10px; }
+    input { 
+        width: 100%; padding: 10px; border: 1px solid #e5e7eb; border-radius: 8px; 
+        font-size: 15px; outline: none; box-sizing: border-box; 
+    }
+    
+    #stats { font-size: 12px; color: #64748b; margin-bottom: 15px; font-weight: 600; }
+    
+    .result-item { border-bottom: 1px solid #f1f5f9; padding: 15px 0; }
+    
+    /* Arabisch etwas kleiner (von 32px auf 26px) */
+    .arabic { 
+        font-family: 'Amiri', serif; 
+        font-size: 26px; 
+        text-align: right; 
+        direction: rtl; 
+        display: block; 
+        color: #111; 
+        line-height: 1.6; 
+        margin-bottom: 8px; 
+    }
+    
+    /* Deutsch etwas kleiner (von 18px auf 15px) */
+    .german { 
+        font-size: 15px; 
+        color: #4b5563; 
+        line-height: 1.5; 
+        border-left: 3px solid #166534; 
+        padding-left: 12px; 
+    }
+    
+    .meta { font-size: 10px; color: #94a3b8; margin-top: 10px; text-transform: uppercase; }
+</style>
 </head>
 <body>
 
