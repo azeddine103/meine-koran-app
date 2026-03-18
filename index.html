@@ -1,82 +1,75 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-	<link rel="manifest" href="manifest.json">
-	<meta name="apple-mobile-web-app-capable" content="yes">
-	<meta name="apple-mobile-web-app-status-bar-style" content="default">
-	<link rel="apple-touch-icon" href="icon.png">
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Koran Suche - Smart & Stats</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Koran Suche Pro</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#166534">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+	<link rel="icon" type="image/png" href="quran.png">
+    <link rel="apple-touch-icon" href="quran.png">
+
     <link href="https://fonts.googleapis.com/css2?family=Amiri&display=swap" rel="stylesheet">
     <style>
-    body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; padding: 15px; color: #333; }
-    .container { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
-    h1 { text-align: center; color: #166534; font-size: 22px; margin-bottom: 5px; }
-    
-    #status { text-align: center; font-size: 12px; margin-bottom: 10px; padding: 5px; border-radius: 4px; }
-    .loading { background: #fef9c3; color: #854d0e; }
-    .ready { background: #dcfce7; color: #166534; }
-    
-    .search-wrapper { margin-bottom: 10px; }
-    input { 
-        width: 100%; padding: 10px; border: 1px solid #e5e7eb; border-radius: 8px; 
-        font-size: 15px; outline: none; box-sizing: border-box; 
-    }
-    
-    #stats { font-size: 12px; color: #64748b; margin-bottom: 15px; font-weight: 600; }
-    
-    .result-item { border-bottom: 1px solid #f1f5f9; padding: 15px 0; }
-    
-    /* Arabisch etwas kleiner (von 32px auf 26px) */
-    .arabic { 
-        font-family: 'Amiri', serif; 
-        font-size: 16px; 
-        text-align: right; 
-        direction: rtl; 
-        display: block; 
-        color: #111; 
-        line-height: 1.6; 
-        margin-bottom: 8px; 
-    }
-    
-    /* Deutsch etwas kleiner (von 18px auf 15px) */
-    .german { 
-        font-size: 15px; 
-        color: #4b5563; 
-        line-height: 1.5; 
-        border-left: 3px solid #166534; 
-        padding-left: 12px; 
-    }
-    
-    .meta { font-size: 10px; color: #94a3b8; margin-top: 10px; text-transform: uppercase; }
-</style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; padding: 15px; color: #333; margin: 0; }
+        .container { max-width: 850px; margin: auto; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 25px rgba(0,0,0,0.05); }
+        h1 { text-align: center; color: #166534; font-size: 24px; }
+        
+        #status { text-align: center; font-size: 12px; margin-bottom: 15px; padding: 5px; border-radius: 6px; }
+        .loading { background: #fef9c3; color: #854d0e; }
+        .ready { background: #dcfce7; color: #166534; }
+        
+        .search-wrapper { position: sticky; top: 10px; z-index: 100; background: white; padding: 5px 0; }
+        input { 
+            width: 100%; padding: 15px; border: 2px solid #e5e7eb; border-radius: 12px; 
+            font-size: 18px; outline: none; box-sizing: border-box; transition: 0.2s;
+        }
+        input:focus { border-color: #166534; box-shadow: 0 0 0 4px rgba(22, 101, 52, 0.1); }
+
+        #stats { font-size: 13px; color: #64748b; margin: 10px 0; font-weight: 600; }
+        
+        .result-item { border-bottom: 1px solid #f1f5f9; padding: 20px 0; }
+        .arabic { font-family: 'Amiri', serif; font-size: 28px; text-align: right; direction: rtl; color: #111; line-height: 1.8; margin-bottom: 10px; }
+        .german { font-size: 16px; color: #4b5563; line-height: 1.5; border-left: 3px solid #166534; padding-left: 12px; }
+        .meta { font-size: 11px; color: #94a3b8; margin-top: 10px; text-transform: uppercase; }
+
+        /* Optimierung für Mobile "App-Gefühl" */
+        @media (max-width: 600px) {
+            .container { border-radius: 0; box-shadow: none; padding: 15px; }
+            body { background: white; }
+        }
+    </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>📖 Koran Suchmaschine</h1>
-    <div id="status" class="loading">Daten werden vorbereitet...</div>
+    <h1>📖 Koran Suche</h1>
+    <div id="status" class="loading">Wird geladen...</div>
 
     <div class="search-wrapper">
-        <input type="text" id="searchInput" placeholder="Suchwort (Deutsch oder Arabisch)..." oninput="autoSearch()">
+        <input type="text" id="searchInput" placeholder="Suchen..." oninput="autoSearch()">
     </div>
     
     <div id="stats"></div>
-
     <div id="results"></div>
 </div>
 
 <script>
     let quranData = [];
 
+    // Service Worker Registrierung für PWA
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js').then(() => console.log("Service Worker aktiv"));
+    }
+
     function cleanAr(text) {
         return text.replace(/[\u064B-\u065F\u0670]/g, "").replace(/أ|إ|آ/g, "ا").replace(/ة/g, "ه").toLowerCase();
     }
 
-    function isArabic(text) {
-        return /[\u0600-\u06FF]/.test(text);
-    }
+    function isArabic(text) { return /[\u0600-\u06FF]/.test(text); }
 
     async function init() {
         const status = document.getElementById('status');
@@ -85,7 +78,6 @@
                 fetch('https://api.alquran.cloud/v1/quran/de.aburida'),
                 fetch('https://api.alquran.cloud/v1/quran/quran-simple')
             ]);
-
             const deJSON = await deRes.json();
             const arJSON = await arRes.json();
 
@@ -100,11 +92,10 @@
                 }))
             );
 
-            status.innerText = "✅ System bereit";
+            status.innerText = "✨ App bereit";
             status.className = "ready";
         } catch (err) {
-            status.innerText = "❌ Fehler beim Laden.";
-            status.className = "error";
+            status.innerText = "Verbindung prüfen...";
         }
     }
 
@@ -114,39 +105,22 @@
         const resDiv = document.getElementById('results');
         const statsDiv = document.getElementById('stats');
         
-        // Richtung anpassen
         input.style.direction = isArabic(query) ? "rtl" : "ltr";
-        input.style.textAlign = isArabic(query) ? "right" : "left";
 
-        if (query.length < 2) {
-            resDiv.innerHTML = "";
-            statsDiv.innerText = "";
-            return;
-        }
+        if (query.length < 2) { resDiv.innerHTML = ""; statsDiv.innerText = ""; return; }
 
-        const filtered = quranData.filter(item => {
-            if (isArabic(query)) {
-                return item.arClean.includes(cleanAr(query));
-            } else {
-                return item.deText.toLowerCase().includes(query.toLowerCase());
-            }
-        });
+        const filtered = quranData.filter(item => 
+            isArabic(query) ? item.arClean.includes(cleanAr(query)) : item.deText.toLowerCase().includes(query.toLowerCase())
+        );
 
-        // Trefferzahl anzeigen
-        statsDiv.innerText = `Gefundene Treffer: ${filtered.length}`;
-
-        resDiv.innerHTML = "";
-        // Wir zeigen alle an, aber begrenzen für die Performance auf die ersten 100
-        filtered.slice(0, 100).forEach(item => {
-            const div = document.createElement('div');
-            div.className = 'result-item';
-            div.innerHTML = `
+        statsDiv.innerText = `${filtered.length} Treffer`;
+        resDiv.innerHTML = filtered.slice(0, 100).map(item => `
+            <div class="result-item">
                 <div class="arabic">${item.arText}</div>
                 <div class="german">${item.deText}</div>
-                <div class="meta">Sure ${item.sNum} (${item.sName}) | Vers ${item.aNum}</div>
-            `;
-            resDiv.appendChild(div);
-        });
+                <div class="meta">Sure ${item.sNum} | Vers ${item.aNum}</div>
+            </div>
+        `).join('');
     }
 
     init();
