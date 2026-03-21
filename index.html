@@ -9,7 +9,7 @@
     <meta name="theme-color" content="#166534">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-	<link rel="icon" type="image/png" href="quran.png">
+    <link rel="icon" type="image/png" href="quran.png">
     <link rel="apple-touch-icon" href="quran.png">
 
     <link href="https://fonts.googleapis.com/css2?family=Amiri&display=swap" rel="stylesheet">
@@ -36,7 +36,20 @@
         .german { font-size: 16px; color: #4b5563; line-height: 1.5; border-left: 3px solid #166534; padding-left: 12px; }
         .meta { font-size: 11px; color: #94a3b8; margin-top: 10px; text-transform: uppercase; }
 
-        /* Optimierung für Mobile "App-Gefühl" */
+        /* Highlighting */
+        mark {
+            background-color: #bbf7d0;
+            color: #14532d;
+            border-radius: 3px;
+            padding: 0 2px;
+            font-weight: 600;
+        }
+        .arabic mark {
+            background-color: #bbf7d0;
+            color: #14532d;
+            font-weight: normal;
+        }
+
         @media (max-width: 600px) {
             .container { border-radius: 0; box-shadow: none; padding: 15px; }
             body { background: white; }
@@ -60,7 +73,6 @@
 <script>
     let quranData = [];
 
-    // Service Worker Registrierung für PWA
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('sw.js').then(() => console.log("Service Worker aktiv"));
     }
@@ -70,6 +82,79 @@
     }
 
     function isArabic(text) { return /[\u0600-\u06FF]/.test(text); }
+
+    /**
+     * Hebt alle Vorkommen von `query` im `text` hervor.
+     * Gibt einen HTML-String mit <mark>-Tags zurück.
+     * Für arabische Texte wird der bereinigte Text für die Suche verwendet,
+     * aber der Originaltext für die Anzeige beibehalten.
+     */
+    function highlight(text, query, arabic = false) {
+        if (!query || query.length < 2) return text;
+
+        if (arabic) {
+            // Für arabischen Text: Suche im bereinigten Text, hebe im Original hervor
+            const cleanQuery = cleanAr(query);
+            const cleanText = cleanAr(text);
+            
+            // Finde alle Positionen im bereinigten Text
+            const positions = [];
+            let idx = 0;
+            while ((idx = cleanText.indexOf(cleanQuery, idx)) !== -1) {
+                positions.push(idx);
+                idx += cleanQuery.length;
+            }
+            if (positions.length === 0) return text;
+
+            // Baue den Original-Text mit <mark>-Tags
+            // Da bereinigte und originale Zeichen nicht 1:1 übereinstimmen,
+            // verwenden wir einen zeichenweisen Ansatz
+            const cleanChars = [...cleanText];
+            const origChars = [...text];
+
+            // Mappe Original-Indizes auf bereinigte Indizes
+            const origToClean = [];
+            let cleanIdx = 0;
+            for (let i = 0; i < origChars.length; i++) {
+                const origChar = origChars[i];
+                const isVowel = /[\u064B-\u065F\u0670]/.test(origChar);
+                if (isVowel) {
+                    origToClean.push(cleanIdx); // Vokale überspringen
+                } else {
+                    origToClean.push(cleanIdx);
+                    cleanIdx++;
+                }
+            }
+
+            // Markierte Positionen (im bereinigten Text)
+            const markedClean = new Set();
+            for (const pos of positions) {
+                for (let j = pos; j < pos + cleanQuery.length; j++) {
+                    markedClean.add(j);
+                }
+            }
+
+            // Original-Text mit <mark>-Tags aufbauen
+            let result = '';
+            let inMark = false;
+            for (let i = 0; i < origChars.length; i++) {
+                const isVowel = /[\u064B-\u065F\u0670]/.test(origChars[i]);
+                const cIdx = isVowel ? origToClean[i] : origToClean[i];
+                const shouldMark = markedClean.has(cIdx) && !isVowel;
+
+                if (shouldMark && !inMark) { result += '<mark>'; inMark = true; }
+                if (!shouldMark && inMark) { result += '</mark>'; inMark = false; }
+                result += origChars[i];
+            }
+            if (inMark) result += '</mark>';
+            return result;
+        } else {
+            // Für deutschen Text: einfaches case-insensitives Highlighting
+            const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const regex = new RegExp(`(${escapedQuery})`, 'gi');
+            return text.replace(regex, '<mark>$1</mark>');
+        }
+    }
 
     async function init() {
         const status = document.getElementById('status');
@@ -104,20 +189,23 @@
         const query = input.value.trim();
         const resDiv = document.getElementById('results');
         const statsDiv = document.getElementById('stats');
+        const arabic = isArabic(query);
         
-        input.style.direction = isArabic(query) ? "rtl" : "ltr";
+        input.style.direction = arabic ? "rtl" : "ltr";
 
         if (query.length < 2) { resDiv.innerHTML = ""; statsDiv.innerText = ""; return; }
 
         const filtered = quranData.filter(item => 
-            isArabic(query) ? item.arClean.includes(cleanAr(query)) : item.deText.toLowerCase().includes(query.toLowerCase())
+            arabic
+                ? item.arClean.includes(cleanAr(query))
+                : item.deText.toLowerCase().includes(query.toLowerCase())
         );
 
         statsDiv.innerText = `${filtered.length} Treffer`;
         resDiv.innerHTML = filtered.slice(0, 100).map(item => `
             <div class="result-item">
-                <div class="arabic">${item.arText}</div>
-                <div class="german">${item.deText}</div>
+                <div class="arabic">${highlight(item.arText, arabic ? query : '', true)}</div>
+                <div class="german">${highlight(item.deText, arabic ? '' : query, false)}</div>
                 <div class="meta">Sure ${item.sNum} | Vers ${item.aNum}</div>
             </div>
         `).join('');
